@@ -1,0 +1,24 @@
+{
+  "name": "tanren",
+  "owner": {
+    "name": "inadati"
+  },
+  "metadata": {
+    "description": "MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）駆動の品質鍛錬ハーネス。コード・ブログ記事・スライド等あらゆる成果物に対して汎用的に使える自律的品質改善ループ。"
+  },
+  "plugins": [
+    {
+      "name": "tanren",
+      "source": "./plugins/tanren",
+      "description": "MCTS × PRM駆動の品質鍛錬ハーネス。準備フェーズ（/tanren）と実行フェーズ（/tanren:run）の2スキル構成。",
+      "version": "0.1.0",
+      "author": {
+        "name": "inadati"
+      },
+      "repository": "https://github.com/inadati/tanren",
+      "license": "MIT",
+      "category": "productivity",
+      "tags": ["tanren", "mcts", "prm", "quality", "harness", "development"]
+    }
+  ]
+}
