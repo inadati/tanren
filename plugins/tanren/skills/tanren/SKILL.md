@@ -5,7 +5,7 @@ description: |
   "tanrenで実装したい", "品質を鍛え上げて",
   or wants to start the tanren harness preparation phase (wantree through PRM criteria review).
   Covers all steps up to handing off to tanren:run.
-version: 0.1.0
+version: 0.2.0
 tools: Read, Write, Edit, Bash, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, Glob
 ---
 
@@ -102,6 +102,8 @@ tree:
 ---
 終了: x
 ```
+
+**絶対禁止**: コードブロック内の `wantree.yml` を `...` や `# 省略` などで省略してはならない。**常に全文を表示する。**
 
 ### 1c: wantree.yml の特定
 
