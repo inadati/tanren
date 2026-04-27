@@ -1,15 +1,15 @@
 ---
 name: run
 description: |
-  This skill should be used when the user asks to "tanren:runを起動して", "MCTSループを開始して",
+  This skill should be used when the user asks to "mcts-harness:runを起動して", "MCTSループを開始して",
   "鍛錬の実行フェーズを開始して",
-  or wants to start the tanren execution phase (MCTS quality improvement loop).
-  Requires tanren preparation phase to have been completed first.
+  or wants to start the mcts-harness execution phase (MCTS quality improvement loop).
+  Requires mcts-harness preparation phase to have been completed first.
 version: 0.1.0
 tools: Read, Write, Edit, Bash, Agent, Glob
 ---
 
-# tanren:run スキル（実行フェーズ）
+# mcts-harness:run スキル（実行フェーズ）
 
 MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）による自律的品質改善ループ。
 本スキルは実行フェーズを担当する。
@@ -23,7 +23,7 @@ MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）に�
 
 `Read` で `/Users/ittan/.claude/projects/-Users-ittan-Asweed/memory/MEMORY.md` を読み込む。
 
-`## tanren 実行待ち` セクションから以下を取得する:
+`## mcts-harness 実行待ち` セクションから以下を取得する:
 - 実装プランファイルのパス
 - PRM評価軸ファイルのパス
 
@@ -31,23 +31,23 @@ MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）に�
 
 ファイルが見つからない場合:
 ```
-tanren の準備フェーズが完了していません。
-先に /tanren を実行してください。
+mcts-harness の準備フェーズが完了していません。
+先に /mcts-harness を実行してください。
 ```
 と出力してスキルを終了する。
 
 ### 0b: MCTSツリーの初期化
 
-`.tanren/` ディレクトリを作成し、ツリーファイルを初期化する:
+`.mcts-harness/` ディレクトリを作成し、ツリーファイルを初期化する:
 
 ```bash
-mkdir -p .tanren/snapshots
+mkdir -p .mcts-harness/snapshots
 ```
 
-`.tanren/tree.yml` を以下の内容で作成する:
+`.mcts-harness/tree.yml` を以下の内容で作成する:
 
 ```yaml
-# tanren MCTS ツリー
+# mcts-harness MCTS ツリー
 iteration: 0
 best_score: 0.0
 status: running  # running | converged | max_reached
@@ -93,7 +93,7 @@ MCTSループを開始します。
 
 ### ステップ 1: Selection（選択）
 
-`.tanren/tree.yml` を `Read` で読み込む。
+`.mcts-harness/tree.yml` を `Read` で読み込む。
 
 **UCB1 スコアの計算:**
 
@@ -236,7 +236,7 @@ PRM 評価の対象ノードから**成果物を完成まで展開する**。
 全エージェントの完了後、成果物のスナップショットを保存する:
 
 ```
-.tanren/snapshots/<対象ノードID>.md （または適切な拡張子）
+.mcts-harness/snapshots/<対象ノードID>.md （または適切な拡張子）
 ```
 
 対象ノードの `snapshot_path` を更新する。
@@ -320,4 +320,4 @@ iteration >= max_iterations
 
 ### 2d: MEMORY.md のクリーンアップ
 
-`MEMORY.md` から `## tanren 実行待ち` セクションを削除する（`Edit` ツールで）。
+`MEMORY.md` から `## mcts-harness 実行待ち` セクションを削除する（`Edit` ツールで）。
