@@ -5,7 +5,7 @@ description: |
   "mcts-harnessで実装したい", "品質を鍛え上げて",
   or wants to start the mcts-harness preparation phase (wantree through PRM criteria review).
   Covers all steps up to handing off to mcts-harness:run.
-version: 0.2.0
+version: 0.3.0
 tools: Read, Write, Edit, Bash, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, Glob
 ---
 
@@ -157,8 +157,10 @@ tree:
 - 実装プランの内容から、この成果物に適した評価観点を導出する
 - 3つの観点が互いに**重複せず・網羅的に**なるよう設計する（MECE）
 - 各評価基準は **0.0〜1.0 のスコアで採点できる粒度** で書く
-- 基準は思いつく限り多く・厳しく・具体的に列挙する
-- 合格スコアのデフォルトは **0.85**（競合する観点同士のみ引き下げを検討）
+- 基準は **最低10項目以上**・極限まで厳しく・二値判定可能な粒度で列挙する
+- 「できている」「わかりやすい」など曖昧な基準は禁止。必ず具体的・測定可能な形にする
+- 合格スコアのデフォルトは **0.92**（競合する観点同士でも 0.90 以下には下げない）
+- 1つでも0.65未満の基準があればその評価者のoverall_scoreは0.5上限とする（ペナルティルール）
 
 ### 成果物別の評価軸の例
 
@@ -179,32 +181,34 @@ prm_evaluators:
   - id: evaluator_a
     role: "評価観点の名前（例: コード品質）"
     focus: "何に着目して評価するか（1〜2文）"
+    penalty_rule: "1つでも0.65未満の基準があればoverall_scoreは0.5を上限とする"
     criteria:
       - "採点基準1（具体的・二値判定可能な粒度で）"
       - "採点基準2"
-      - "採点基準3"
-      - （思いつく限り列挙する）
-    passing_score: 0.85
+      - （最低10項目以上。曖昧な基準は禁止。測定・検証可能な形で書く）
+    passing_score: 0.92
 
   - id: evaluator_b
     role: "評価観点の名前"
     focus: "何に着目して評価するか"
+    penalty_rule: "1つでも0.65未満の基準があればoverall_scoreは0.5を上限とする"
     criteria:
       - "採点基準1"
-      - （思いつく限り列挙する）
-    passing_score: 0.85
+      - （最低10項目以上。曖昧な基準は禁止）
+    passing_score: 0.92
 
   - id: evaluator_c
     role: "評価観点の名前"
     focus: "何に着目して評価するか"
+    penalty_rule: "1つでも0.65未満の基準があればoverall_scoreは0.5を上限とする"
     criteria:
       - "採点基準1"
-      - （思いつく限り列挙する）
-    passing_score: 0.85
+      - （最低10項目以上。曖昧な基準は禁止）
+    passing_score: 0.92
 
 convergence:
-  threshold: 0.85     # 全評価者の平均がこれを超えたら収束
-  max_iterations: 10  # MCTSループの上限回数
+  threshold: 0.90     # 全評価者の平均がこれを超えたら収束
+  max_iterations: 15  # MCTSループの上限回数
 ```
 
 `ExitPlanMode` で評価軸プランを提出する。

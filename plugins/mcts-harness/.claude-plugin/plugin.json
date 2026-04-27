@@ -1,5 +1,5 @@
 {
   "name": "mcts-harness",
   "description": "MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）駆動の品質鍛錬ハーネス。",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }
