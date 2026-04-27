@@ -5,7 +5,7 @@ description: |
   "鍛錬の実行フェーズを開始して",
   or wants to start the mcts-harness execution phase (MCTS quality improvement loop).
   Requires mcts-harness preparation phase to have been completed first.
-version: 0.1.0
+version: 0.2.0
 tools: Read, Write, Edit, Bash, Agent, Glob
 ---
 
@@ -13,7 +13,7 @@ tools: Read, Write, Edit, Bash, Agent, Glob
 
 MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）による自律的品質改善ループ。
 本スキルは実行フェーズを担当する。
-プランの読み込み → MCTSループ（Selection → Expansion → PRM評価 → Rollout → Backpropagation） → 最良成果物の採用。
+プランの読み込み → MCTSループ（Selection → Expansion → Rollout → 悪魔の代弁者検証 → PRM評価 → Backpropagation） → 最良成果物の採用。
 
 ---
 
@@ -131,14 +131,19 @@ N(n)      = ノード n の visits
 現在の状態（選択ノード）:
 <選択ノードのdescriptionとsnapshot内容（存在する場合）>
 
+これまでの評価フィードバック（すべて反映すること）:
+<.mcts-harness/snapshots/ 内の *_feedback.md の全文>
+
 あなたのタスク: 次の実装ステップの「候補アプローチ」を1つ提案してください。
 - 他のエージェントとは異なる角度・方針で提案すること
+- フィードバックで指摘された弱点を克服する方針を含めること
 - あなたのアプローチ番号: <1 or 2 or 3>
 
 以下の形式で返答してください:
 approach_id: candidate-<ノードID>-<1 or 2 or 3>
 description: このアプローチの方針（2〜3文）
 next_action: 具体的に次に何をするか（1文）
+addresses_feedback: フィードバックのどの指摘にどう対処するか（1〜2文）
 ```
 
 3エージェントの結果を子ノードとして `tree.yml` に追加する:
@@ -158,57 +163,11 @@ next_action: 具体的に次に何をするか（1文）
 
 ---
 
-### ステップ 3: PRM 評価（3エージェント並列）
+### ステップ 3: Rollout（ロールアウト）
 
-展開された3候補のうち、**UCB1最高の候補**を対象に PRM 評価を行う。
+展開された3候補のうち **UCB1最高の候補** を対象に、**実際に成果物を完成まで実装する**。
 
-**`prm-criteria.yml` の evaluator_a / evaluator_b / evaluator_c を使い、3エージェントを並列起動する。**
-
-各評価エージェントへのプロンプト:
-
-```
-あなたは厳格な評価エージェントです。
-
-あなたの評価観点: 「<evaluator.role>」
-着目ポイント: <evaluator.focus>
-
-評価対象のアプローチ:
-<対象候補のdescriptionとnext_action>
-
-現在の実装コンテキスト:
-<選択ノードのsnapshot内容（存在する場合）>
-
-評価基準（各基準を0.0〜1.0で採点してください）:
-<evaluator.criteriaを番号付きリストで列挙>
-
-scoring:
-  - 全基準を満たす: 1.0
-  - おおむね満たす: 0.7〜0.9
-  - 部分的に満たす: 0.4〜0.6
-  - ほとんど満たさない: 0.1〜0.3
-
-以下の形式で返答してください:
-evaluator_id: <evaluator.id>
-scores:
-  - criterion: "<基準テキスト>"
-    score: 0.0〜1.0
-    reason: 判定理由（1行）
-overall_score: <全基準の平均>
-feedback: |
-  評価の総評と改善点（2〜3文）
-```
-
-3エージェントの `overall_score` の平均を計算し、対象ノードのスコアとする:
-
-```
-node_score = (evaluator_a.overall_score + evaluator_b.overall_score + evaluator_c.overall_score) / 3
-```
-
----
-
-### ステップ 4: Rollout（ロールアウト）
-
-PRM 評価の対象ノードから**成果物を完成まで展開する**。
+評価は実装後に行うため、ここでは「完全な成果物」を生成することだけに集中する。
 
 実装プランを参照し、`Agent` を可能な限り並列で起動して成果物を生成する。
 
@@ -219,17 +178,20 @@ PRM 評価の対象ノードから**成果物を完成まで展開する**。
 
 各 `Agent` には以下を与える:
 ```
-あなたは実装エージェントです。
+あなたは実装エージェントです。妥協なく完全な実装を行ってください。
 
 実装プラン:
 <実装プランの内容>
 
 担当箇所: <このエージェントが担当する部分>
 
-現在のコンテキスト:
-<選択ノードのsnapshot + 評価フィードバック>
+現在のコンテキスト（前回の改善点を必ず反映すること）:
+<選択ノードのsnapshot内容（存在する場合）>
+<これまでの評価フィードバックの全文>
 
 担当箇所を実装してください。
+- TODO・placeholder・省略は一切禁止
+- 前回フィードバックで指摘された点はすべて対処すること
 完了したら実装内容の要約を返してください。
 ```
 
@@ -243,7 +205,131 @@ PRM 評価の対象ノードから**成果物を完成まで展開する**。
 
 ---
 
-### ステップ 5: Backpropagation（バックプロパゲーション）
+### ステップ 4: 悪魔の代弁者検証（Devil's Advocate）
+
+**報酬ハッキング検出専門の単独エージェントを起動する。**
+
+このエージェントは「基準を表面的に満たすだけの欺瞞的実装」を探し出すことだけに特化する。
+PRM評価エージェントより先に実行し、`penalty_applied` の最終決定権を持つ。
+
+エージェントプロンプト:
+
+```
+あなたは報酬ハッキング検出の専門家です。
+実装エージェントが評価基準の文言だけを満たして本質的な品質を偽装していないかを検証します。
+
+検証対象（実際に生成された成果物の全文）:
+<スナップショットの全文>
+
+PRM評価基準（参照用）:
+<prm-criteria.ymlの全文>
+
+以下のパターンを重点的に探してください:
+- エラーハンドリングはあるが中身が空（catch {}、pass、TODO等）
+- テストはあるが自明すぎる（assert True、assert 1 == 1等）
+- コメントはあるが内容と無関係または自動生成的
+- 関数・クラスは定義されているが実装されていない（raise NotImplementedError等）
+- 要件の文言をそのままコピーしたような実装
+- 評価基準の単語が成果物に出現しているが意味のある形で機能していない
+- 前回フィードバックの指摘箇所だけ直して他の箇所は手付かず
+- スコアを上げるための追記が成果物の一貫性を損なっている
+
+重要: 前回イテレーションのスコアは一切参照しない。成果物の内容だけを見ること。
+
+以下の形式で返答してください:
+devil_verdict: penalty / no_penalty
+confidence: 0.0〜1.0  # 判定の確信度
+findings:
+  - pattern: "検出されたハッキングパターンの種別"
+    location: "成果物内の該当箇所（引用）"
+    reason: "これが表面的充足である根拠"
+  （発見なければ空リスト）
+summary: |
+  判定理由の総括（1〜3文）
+recommended_score_cap: 0.3  # penaltyの場合のみ。overall_scoreの上限値を指定する
+```
+
+**結果を `.mcts-harness/snapshots/<ノードID>_devil.md` に保存する。**
+
+`devil_verdict: penalty` の場合: 後続のPRM評価のoverall_scoreを `recommended_score_cap` で上書きする。
+`devil_verdict: no_penalty` の場合: PRM評価に処理を委ねる。
+
+---
+
+### ステップ 5: PRM 評価（3エージェント並列）
+
+**ステップ3で生成した実際のスナップショット（成果物）を対象に** PRM 評価を行う。
+
+**重要: 評価エージェントには前回イテレーションのスコアを渡さない。成果物とdevilレポートのみ渡す。**
+
+**`prm-criteria.yml` の evaluator_a / evaluator_b / evaluator_c を使い、3エージェントを並列起動する。**
+
+各評価エージェントへのプロンプト:
+
+```
+あなたは妥協なき評価エージェントです。甘い評価は品質を損なう。厳格に採点してください。
+
+禁止事項:
+- 前回イテレーションのスコアを参照・推測すること
+- 「前回より改善されている」という理由でスコアを上げること
+- スコアの連続性・一貫性を保とうとすること
+成果物の内容だけを独立して評価すること。
+
+悪魔の代弁者レポート（既に検出された疑義）:
+<_devil.mdの全文>
+
+あなたの評価観点: 「<evaluator.role>」
+着目ポイント: <evaluator.focus>
+ペナルティルール: <evaluator.penalty_rule>
+
+評価対象（実際に生成された成果物の全文）:
+<スナップショットの全文>
+
+評価基準（各基準を0.0〜1.0で採点してください）:
+<evaluator.criteriaを番号付きリストで列挙>
+
+scoring（厳格基準）:
+  - 完全・完璧に満たす: 0.95〜1.0
+  - 実質的に満たすが軽微な欠陥あり: 0.80〜0.94
+  - 部分的に満たすが重大な欠陥あり: 0.50〜0.79
+  - ほとんど満たさない: 0.20〜0.49
+  - まったく満たさない・逆効果: 0.0〜0.19
+
+「おおむね良い」は 0.85 ではなく 0.80 以下。「完璧」以外は 0.95 を超えない。
+
+表面的充足の検出: 評価基準の文言を形式的に満たしているだけで本質的な品質を伴わない実装は
+0.30 以下をつけること（悪魔レポートの指摘がある箇所は特に厳しく判定する）。
+
+自分のペナルティルール適用: 1つでも0.65未満の基準があればoverall_scoreを0.5に上書きする。
+
+以下の形式で返答してください:
+evaluator_id: <evaluator.id>
+penalty_applied: true / false  # 自分のルールによるペナルティ
+scores:
+  - criterion: "<基準テキスト>"
+    score: 0.0〜1.0
+    superficial: true / false  # 表面的充足と判断した場合true
+    reason: 具体的な判定理由（「〜という点で不十分」「〜が欠けている」など）
+overall_score: <ペナルティ適用後のスコア（ペナルティなしの場合は全基準の平均）>
+feedback: |
+  評価の総評と具体的な改善指示（「〜を修正せよ」という命令形で3〜5文）
+```
+
+**スコアの最終決定:**
+
+```
+# 悪魔のペナルティが優先
+if devil_verdict == "penalty":
+    各evaluatorのoverall_score = min(overall_score, recommended_score_cap)
+
+node_score = (evaluator_a.overall_score + evaluator_b.overall_score + evaluator_c.overall_score) / 3
+```
+
+**評価フィードバックは `.mcts-harness/snapshots/<ノードID>_feedback.md` に保存する（次のRolloutで参照するため）。**
+
+---
+
+### ステップ 6: Backpropagation（バックプロパゲーション）
 
 ロールアウト完了後、リーフノードから根ノードへスコアを伝播する。
 
@@ -264,7 +350,7 @@ best_score = max(全リーフノードのq_value)
 
 ---
 
-### ステップ 6: 収束判定
+### ステップ 7: 収束判定
 
 以下の順で判定する:
 
@@ -301,17 +387,27 @@ iteration >= max_iterations
 鍛錬完了
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-状態: <converged | max_reached>
+状態: <converged（合格）| max_reached（上限到達・未収束）>
 反復回数: <iteration>回
-最終スコア: <best_score> / 1.0
-採用パス: <最良ノードIDのルートからの経路>
+最終スコア: <best_score> / 1.0（合格ライン: 0.90）
 
 評価者別スコア:
-  <evaluator_a.role>: <スコア>
-  <evaluator_b.role>: <スコア>
-  <evaluator_c.role>: <スコア>
+  <evaluator_a.role>: <スコア>  <passing_score以上なら PASS / 未満なら FAIL>
+  <evaluator_b.role>: <スコア>  <PASS / FAIL>
+  <evaluator_c.role>: <スコア>  <PASS / FAIL>
+
+ペナルティ発動回数（PRM）: <全イテレーション合計>
+悪魔の代弁者介入回数: <penalty判定を出した回数> / <全イテレーション数>
+採用パス: <最良ノードIDのルートからの経路>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+`max_reached` の場合は以下も表示する:
+```
+⚠ 上限反復数に達しましたが収束しませんでした（最終スコア: <best_score>）。
+  改善が不十分な点: <各評価者のfeedbackから未解決の指摘を要約>
+  推奨: PRM評価軸を見直すか、実装プランを修正してから再実行してください。
 ```
 
 ### 2c: 最終成果物の提示

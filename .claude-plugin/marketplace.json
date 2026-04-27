@@ -11,7 +11,7 @@
       "name": "mcts-harness",
       "source": "./plugins/mcts-harness",
       "description": "MCTS × PRM駆動の品質鍛錬ハーネス。準備フェーズ（/mcts-harness）と実行フェーズ（/mcts-harness:run）の2スキル構成。",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "inadati"
       },
