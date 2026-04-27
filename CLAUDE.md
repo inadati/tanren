@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-このファイルは Claude Code が tanren リポジトリで作業する際のガイダンスを提供する。
+このファイルは Claude Code が mcts-harness リポジトリで作業する際のガイダンスを提供する。
 
 ---
 
@@ -15,14 +15,14 @@
 ## ディレクトリ構造
 
 ```
-tanren/
+mcts-harness/
 ├── plugins/
-│   └── tanren/
+│   └── mcts-harness/
 │       └── skills/
-│           ├── tanren/
-│           │   └── SKILL.md       ← 準備スキル（/tanren）
+│           ├── mcts-harness/
+│           │   └── SKILL.md       ← 準備スキル（/mcts-harness）
 │           └── run/
-│               └── SKILL.md       ← 実行スキル（/tanren:run）
+│               └── SKILL.md       ← 実行スキル（/mcts-harness:run）
 ├── CLAUDE.md（このファイル）
 └── README.md
 ```
@@ -33,23 +33,23 @@ tanren/
 
 | スキル | 呼び出し | 役割 |
 |--------|---------|------|
-| `tanren` | `/tanren` | 準備フェーズ。wantree〜PRM評価軸レビューまで |
-| `run` | `/tanren:run` | 実行フェーズ。MCTSループによる自律的品質改善 |
+| `mcts-harness` | `/mcts-harness` | 準備フェーズ。wantree〜PRM評価軸レビューまで |
+| `run` | `/mcts-harness:run` | 実行フェーズ。MCTSループによる自律的品質改善 |
 
 ---
 
 ## フロー概要
 
 ```
-[人間] /tanren 起動
+[人間] /mcts-harness 起動
   └── wantree（対話的ヒアリング）
   └── 成果物プランニング（EnterPlanMode）
   └── plan-review AUTO-TRIGGER（1回目）
   └── PRM評価軸設計（EnterPlanMode）
   └── plan-review AUTO-TRIGGER（2回目）
-  └── MEMORY.md に記録 → ユーザーに tanren:run 案内
+  └── MEMORY.md に記録 → ユーザーに mcts-harness:run 案内
 
-[人間] コンテキストリセット後 /tanren:run 起動
+[人間] コンテキストリセット後 /mcts-harness:run 起動
   └── MEMORY.md からプラン読み込み
   └── MCTSループ（完全自動）
         Selection（UCB1）
@@ -93,14 +93,14 @@ MCTSのExpansionとRolloutは実装の並列度が高いほど速い。
 
 ## ターゲットプロジェクト側の生成物
 
-`/tanren` を実行したプロジェクトルートに以下が生成される:
+`/mcts-harness` を実行したプロジェクトルートに以下が生成される:
 
 ```
 プロジェクトルート/
 ├── .wantree/
 │   └── 0/
 │       └── wantree.yml          ← 要件定義
-└── .tanren/
+└── .mcts-harness/
     ├── plans/
     │   └── prm-criteria.yml     ← PRM評価軸定義
     ├── tree.yml                 ← MCTSツリー状態
@@ -114,7 +114,7 @@ MCTSのExpansionとRolloutは実装の並列度が高いほど速い。
 
 ### 2026-04-26（v0.1.0）
 
-- tanren ハーネス設計・初回実装
-- 準備スキル（/tanren）と実行スキル（/tanren:run）を作成
+- mcts-harness ハーネス設計・初回実装
+- 準備スキル（/mcts-harness）と実行スキル（/mcts-harness:run）を作成
 - i-harnessの設計を踏まえ、MCTS × PRMベースに全面刷新
 - 汎用成果物対応（コード・ブログ・スライド等）

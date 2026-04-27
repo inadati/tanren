@@ -1,19 +1,19 @@
 ---
-name: tanren
+name: mcts-harness
 description: |
-  This skill should be used when the user asks to "tanrenを起動して", "鍛錬を始めて",
-  "tanrenで実装したい", "品質を鍛え上げて",
-  or wants to start the tanren harness preparation phase (wantree through PRM criteria review).
-  Covers all steps up to handing off to tanren:run.
+  This skill should be used when the user asks to "mcts-harnessを起動して", "鍛錬を始めて",
+  "mcts-harnessで実装したい", "品質を鍛え上げて",
+  or wants to start the mcts-harness preparation phase (wantree through PRM criteria review).
+  Covers all steps up to handing off to mcts-harness:run.
 version: 0.2.0
 tools: Read, Write, Edit, Bash, Agent, AskUserQuestion, EnterPlanMode, ExitPlanMode, Glob
 ---
 
-# tanren スキル（準備フェーズ）
+# mcts-harness スキル（準備フェーズ）
 
 MCTS（モンテカルロ木探索）× PRM（プロセス報酬モデル）駆動の品質鍛錬ハーネス。
 本スキルは準備フェーズを担当する。
-wantree による要件定義 → 成果物プランニング → PRM 評価軸設計 → tanren:run への引き渡し。
+wantree による要件定義 → 成果物プランニング → PRM 評価軸設計 → mcts-harness:run への引き渡し。
 
 ---
 
@@ -28,10 +28,10 @@ A. 要件定義から始める（wantreeで要件を整理したい）
 B. 既存の実装プランがある（フェーズ2から開始）
 ```
 
-`.tanren/plans/` が存在する場合、`Glob` で確認してユーザーに伝える:
+`.mcts-harness/plans/` が存在する場合、`Glob` で確認してユーザーに伝える:
 
 ```
-既存の tanren プランが見つかりました。
+既存の mcts-harness プランが見つかりました。
 新しいプランを作成します（既存は上書きしません）。
 ```
 
@@ -223,10 +223,10 @@ convergence:
 
 ### 6a: プランファイルの保存
 
-確定した評価軸プランを `.tanren/plans/prm-criteria.yml` に書き出す。
+確定した評価軸プランを `.mcts-harness/plans/prm-criteria.yml` に書き出す。
 
 ```bash
-mkdir -p .tanren/plans
+mkdir -p .mcts-harness/plans
 ```
 
 `~/.claude/plans/` の最新プランファイルのパスも記録しておく。
@@ -236,11 +236,11 @@ mkdir -p .tanren/plans
 `/Users/ittan/.claude/projects/-Users-ittan-Asweed/memory/MEMORY.md` に以下を追記する（Editツールで）:
 
 ```markdown
-## tanren 実行待ち
+## mcts-harness 実行待ち
 
 - **実装プラン**: `~/.claude/plans/<プランファイル名>`
-- **PRM評価軸**: `<カレントディレクトリ>/.tanren/plans/prm-criteria.yml`
-- **次のアクション**: `tanren:run` を起動して MCTSループを開始する
+- **PRM評価軸**: `<カレントディレクトリ>/.mcts-harness/plans/prm-criteria.yml`
+- **次のアクション**: `mcts-harness:run` を起動して MCTSループを開始する
 ```
 
 ### 6c: ユーザーへの案内
@@ -253,8 +253,8 @@ mkdir -p .tanren/plans
 実装プランと PRM 評価軸を保存しました。
 コンテキストをリセットしてから、以下のコマンドで実行フェーズを開始してください:
 
-  /tanren:run
+  /mcts-harness:run
 
-tanren:run は MEMORY.md からプランを自動で読み込み、
+mcts-harness:run は MEMORY.md からプランを自動で読み込み、
 MCTS ループによる自律的な品質改善を開始します。
 ```
