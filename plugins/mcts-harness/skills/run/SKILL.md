@@ -262,7 +262,7 @@ recommended_score_cap: 0.3  # penaltyの場合のみ。overall_scoreの上限値
 
 **重要: 評価エージェントには前回イテレーションのスコアを渡さない。成果物とdevilレポートのみ渡す。**
 
-**`prm-criteria.yml` の evaluator_a / evaluator_b / evaluator_c を使い、3エージェントを並列起動する。**
+**`prm-criteria.yml` に定義された全 evaluator を読み込み、全員を並列起動する。**
 
 各評価エージェントへのプロンプト:
 
@@ -322,7 +322,7 @@ feedback: |
 if devil_verdict == "penalty":
     各evaluatorのoverall_score = min(overall_score, recommended_score_cap)
 
-node_score = (evaluator_a.overall_score + evaluator_b.overall_score + evaluator_c.overall_score) / 3
+node_score = sum(evaluator.overall_score for evaluator in evaluators) / len(evaluators)
 ```
 
 **評価フィードバックは `.mcts-harness/snapshots/<ノードID>_feedback.md` に保存する（次のRolloutで参照するため）。**
@@ -392,9 +392,8 @@ iteration >= max_iterations
 最終スコア: <best_score> / 1.0（合格ライン: 0.90）
 
 評価者別スコア:
-  <evaluator_a.role>: <スコア>  <passing_score以上なら PASS / 未満なら FAIL>
-  <evaluator_b.role>: <スコア>  <PASS / FAIL>
-  <evaluator_c.role>: <スコア>  <PASS / FAIL>
+  （prm-criteria.ymlに定義された全evaluatorを列挙）
+  <evaluator.role>: <スコア>  <passing_score以上なら PASS / 未満なら FAIL>
 
 ペナルティ発動回数（PRM）: <全イテレーション合計>
 悪魔の代弁者介入回数: <penalty判定を出した回数> / <全イテレーション数>
